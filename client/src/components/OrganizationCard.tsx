@@ -35,39 +35,30 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
     }
   };
 
-  const handleClick = () => {
-    if (organization.website && organization.website.trim() !== '') {
-      const url = organization.website.startsWith('http://') || organization.website.startsWith('https://')
-        ? organization.website
-        : `https://${organization.website}`;
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } else {
-      onClick(organization);
-    }
-  };
+  const rawWebsite = organization.website?.trim() || '';
+  const hasWebsite = rawWebsite.length > 0;
+  const targetUrl = hasWebsite
+    ? (rawWebsite.startsWith('http://') || rawWebsite.startsWith('https://')
+        ? rawWebsite
+        : `https://${rawWebsite}`)
+    : undefined;
 
-  return (
-    <div
-      id={`org-card-${organization.slug}`}
-      onClick={handleClick}
-      tabIndex={0}
-      role="button"
-      aria-label={`Visit official website for ${organization.name}`}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleClick();
-        }
-      }}
-      className={`group relative bg-white border rounded-xl p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 select-none ${
-        isHighlighted
-          ? 'border-[#0070F3] ring-4 ring-blue-500/25 shadow-xl scale-[1.02] bg-blue-50/20'
-          : 'border-[#E5E7EB] hover:border-blue-400 hover:shadow-card-hover hover:-translate-y-0.5 shadow-card'
-      }`}
-    >
+  const cardClassName = `group relative bg-white border rounded-xl p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 select-none no-underline text-inherit ${
+    isHighlighted
+      ? 'border-[#0070F3] ring-4 ring-blue-500/25 shadow-xl scale-[1.02] bg-blue-50/20'
+      : 'border-[#E5E7EB] hover:border-blue-400 hover:shadow-card-hover hover:-translate-y-0.5 shadow-card'
+  }`;
+
+  const cardContent = (
+    <>
       <div>
         {/* Logo Container: Standard dimensions, object-fit contain, never cropped */}
-        <div className={`w-full h-24 rounded-lg ${organization.slug === 'slasscom' ? 'bg-[#102D48]' : 'bg-[#F8FAFC]'} border border-slate-100 flex items-center justify-center p-2.5 mb-3 group-hover:bg-blue-50/40 transition`}>
+        <div
+          className={`w-full h-24 rounded-lg ${
+            organization.slug === 'slasscom' ? 'bg-[#102D48]' : 'bg-[#F8FAFC]'
+          } border border-slate-100 flex items-center justify-center p-2.5 mb-3 group-hover:bg-blue-50/40 transition`}
+          title={hasWebsite ? `Visit official website for ${organization.name}` : organization.name}
+        >
           {!imageError && organization.logo ? (
             <img
               src={organization.logo}
@@ -113,11 +104,11 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
       {/* Card Footer: Directly indicates visiting official website */}
       <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
         <span className="text-[11px] text-slate-400 truncate max-w-[120px]">
-          {organization.website && organization.website.trim() !== ''
-            ? organization.website.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]
+          {hasWebsite
+            ? rawWebsite.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]
             : 'TRACE Sri Lanka'}
         </span>
-        {organization.website && organization.website.trim() !== '' ? (
+        {hasWebsite ? (
           <span className="text-[#0070F3] font-semibold flex items-center gap-1 text-[11px] group-hover:translate-x-0.5 transition-transform">
             <span>Visit Site</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -128,7 +119,42 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
           </span>
         )}
       </div>
+    </>
+  );
+
+  if (hasWebsite && targetUrl) {
+    return (
+      <a
+        id={`org-card-${organization.slug}`}
+        href={targetUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Visit official website for ${organization.name}`}
+        className={cardClassName}
+      >
+        {cardContent}
+      </a>
+    );
+  }
+
+  return (
+    <div
+      id={`org-card-${organization.slug}`}
+      onClick={() => onClick(organization)}
+      tabIndex={0}
+      role="button"
+      aria-label={`View details for ${organization.name}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(organization);
+        }
+      }}
+      className={cardClassName}
+    >
+      {cardContent}
     </div>
   );
 };
 
+export default OrganizationCard;
